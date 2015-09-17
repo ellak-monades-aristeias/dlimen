@@ -1,5 +1,5 @@
 
-### Nagios extension for Automatic scanning, Identification and Monitoring of networked devices
+### Persistent storage pool for OwnCloud on Raspberry Pi 2
 
 This project aims to:
 
