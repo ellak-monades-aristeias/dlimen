@@ -5,6 +5,30 @@ import os, os.path
 import time
 import logging
 
+
+pseudofilesys = \
+    dict(map((lambda x: (x, 1)), ('none', 'shmfs', 'procfs', 'tmpfs', 'devtmpfs')))
+
+gdf_cols = ('filesys', 'blocks', 'used', 'avail', 'use', 'dir')
+
+def mounted():
+    '''Get Mounted File Systems'''
+    df = os.popen('df 2>/dev/null', 'r')
+    df.readline() # skip first line
+    mounted = []
+    for line in df.readlines():
+        line = line.strip()
+        rec = dict(zip(gdf_cols, line.split(None, 5)))
+        filesys = rec['filesys']
+        dir = rec.get('dir')
+        if (
+            (dir and not (filesys.find(':') >= 0
+            or pseudofilesys.get(filesys))
+            or 'boot' in dir)
+        ): mounted.append(filesys)
+    df.close()
+    return mounted
+
 def file_counter(path):
     cpt = sum([len(files) for r, d, files in os.walk(path)])
     return cpt
@@ -35,7 +59,9 @@ class Storage:
         mount_list = []
         for device in context.list_devices(DEVTYPE = 'partition'):
             if (device.device_type == 'partition'):
-                mount_list.append("{}".format(device.device_node))
+                dev_mounted_list = mounted()
+                if device.device_node not in dev_mounted_list:
+                    mount_list.append("{}".format(device.device_node))
         disk_name = mount_list[-1].split('/')
         disk_name = disk_name[-1]
         self.logger.info("mounting disk: %s" % (disk_name))
@@ -302,8 +328,10 @@ class Storage:
                 p.communicate()
         dev = os.listdir("/dev/")
         sds = []
+        dev_mounted_list = mounted()
         for i in dev:
-            if "sd" in i and "sda" not in i:
+            #if "sd" in i and "sda" not in i:
+            if "sd" in i and i not in dev_mounted_list:
                 sds.append(i)
         for i in sds:
             try:
