@@ -73,8 +73,8 @@ class Storage:
 #	subprocess.Popen(['chown','-R','www-data.www-data',pool_dir])
         for x in pool_subs:
             try:
-                subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,del:%s/ext_storage_%s/%s' % (mount_path,
-                                                            disk, x), 'none', '%s%s' % (pool_dir, x)])
+                subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,del:%s/storage_pool/%s' % (mount_path,
+                                                            x), 'none', '%s%s' % (pool_dir, x)])
             except:
                 pass
         time.sleep(1)
@@ -86,6 +86,7 @@ class Storage:
         else:
             self.logger.info("could not remove %s" % ext_path+part_name)
     #umounts all the branches from the pool directory
+	
     def umnt_all(self):    # on server close
         self.logger = logging.getLogger("Storage_module.umnt_all")
         pool_dir = self.cfg.get_option('storage_pool', 'pool_path')
@@ -98,6 +99,7 @@ class Storage:
                 p.communicate()
             except:
                 pass
+				
     #mounts a specific path
     def mount_path(self, path):
         self.logger = logging.getLogger("Storage_module.umnt_path")
@@ -108,7 +110,8 @@ class Storage:
         for x in pool_subs:
             subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,append:%s=rw+nolwh' % (path+x),
                           '-o', 'noplink', '-o', 'create=rr', 'none', '%s' % (pool_dir+x)])
-  #umounts pool folders from targeted path
+ 
+ #umounts pool folders from targeted path
     def umnt_path(self, path):
         self.logger = logging.getLogger("Storage_module.umnt_path")
         pool_dir = self.cfg.get_option('storage_pool', 'pool_path')
@@ -212,11 +215,12 @@ class Storage:
                 disk_name = disk_name[-2]
                 for x in pool_subs:
                     try:
-                        subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,append:%sext_storage_%s/%s=rw+nolwh' % (disk, disk_name, x),
+                        subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,append:%sstorage_pool/%s=rw+nolwh' % (disk, x),
                                       '-o', 'noplink', '-o', 'create=rr', 'none', '%s%s' % (pool_dir, x)])
                     except:
                         pass
                     time.sleep(1)
+					
     #paths initialization
     def path_init(self):
         ext_path = self.cfg.get_option("storage_pool", "ext_path")
@@ -229,63 +233,8 @@ class Storage:
                 disks.append(ext_path+item+"/")
         self.logger.info("scanning completed")
         return disks
+		
     def rnm_file(self):
-        """while True:
-            local_path = self.cfg.get_option('storage_pool', 'local_path')
-            dlist = [local_path]
-            dlist = dlist + self.path_init()
-            file_list = []
-            for disk in dlist:
-                disk_subs = os.listdir(disk)
-                for i in range(0, len(disk_subs)):
-                    disk_subs[i] = disk + disk_subs[i] + "/"
-                for sub in disk_subs:
-                    if os.path.isdir(sub) is True:
-                        x = os.listdir(sub)
-                    try:
-                        x.remove(".wh..wh.orph")
-                        x.remove("IndexerVolumeGuid")
-                    except:
-                        pass
-                    for item1 in x:
-                        count = 1
-                        if file_list == []:
-                            file_list.append(sub+item1)
-                        else:
-                            i = 0
-                            for item2 in file_list:
-                                item_tmp1 = sub+item1
-                                item_tmp1 = item_tmp1.split("/")
-                                item_tmp1 = item_tmp1[-2::]
-                                item_tmp1 = "/" + "/".join(item_tmp1)
-                                item_tmp2 = item2.split("/")
-                                item_tmp2 = item_tmp2[-2::]
-                                item_tmp2 = "/" + "/".join(item_tmp2)
-                                if item_tmp1 !=  item_tmp2:
-                                    i += 1
-                                else:
-                                    exists = True
-                                    while exists == True:
-                                        item_to_rename = sub+item1
-                                        item_to_rename = item_to_rename.split(".")
-                                        item_to_rename[0] = item_to_rename[0] + "_%s" % str(count)
-                                        count += 1
-                                        item_to_rename = ".".join(item_to_rename)
-                                        tmp_item = item_to_rename.split("/")
-                                        tmp_item = tmp_item[-2::]
-                                        tmp_item = "/" + "/".join(tmp_item)
-                                        tmp_list = []
-                                        for tmp in file_list:
-                                            tmp = tmp.split("/")
-                                            tmp = tmp[-2::]
-                                            tmp = "/" + "/".join(tmp)
-                                            tmp_list.append(tmp)
-                                        if tmp_item not in tmp_list:
-                                            os.rename(sub+item1, item_to_rename)
-                                            exists = False
-                            if i == len(file_list):
-                                file_list.append(sub+item1)
-            time.sleep(10)"""
         while True:
             local = self.cfg.get_option('storage_pool', 'local_path')
             ext = self.cfg.get_option("storage_pool", "ext_path")
@@ -294,7 +243,7 @@ class Storage:
             for item in list:
                 half_item = item.split("/")
                 disk = half_item[-3]
-                if "ext_storage" in disk:
+                if "storage_pool" in disk:
                     disk = disk.split("_")
                     disk = disk[-1]
                 half_item = half_item[-2::]
@@ -329,8 +278,8 @@ class Storage:
                             pass
                     else:
                         try:
-                            os.rename(ext+to_change_list[num][0]+"/" + "ext_storage_" + "/" + to_change_list[num][1],
-                                  ext+to_change_list[num][0]+"/"+ "ext_storage_" + "/" + item_to_rename)
+                            os.rename(ext+to_change_list[num][0]+"/" + "storage_pool/" + to_change_list[num][1],
+                                  ext+to_change_list[num][0]+"/"+ "storage_pool/" + item_to_rename)
                         except:
                             pass
             time.sleep(3)
@@ -369,8 +318,8 @@ class Storage:
                 subprocess.Popen(["sudo", "mkdir", ext_path+i])
                 time.sleep(1)
                 subprocess.Popen(["sudo", "mount", "/dev/"+i, ext_path+i])
-            if os.path.exists(ext_path + i + "/" + "ext_storage_" + i + "/") is False:
-                subprocess.Popen(["sudo", "mkdir", ext_path+ i + "/" + "ext_storage_" + i + "/"])
+            if os.path.exists(ext_path + i + "/" + "storage_pool/") is False:
+                subprocess.Popen(["sudo", "mkdir", ext_path+ i + "/" + "storage_pool/"])
 
     def ext_list_creator(self):
         ext_path = self.cfg.get_option("storage_pool", "ext_path")
@@ -381,12 +330,12 @@ class Storage:
         ffl = []
         for i in ext:
             for sub in pool_subs:
-                ext_disk = os.listdir(ext_path+i+"/ext_storage_"+ i+"/"+sub)
+                ext_disk = os.listdir(ext_path+i+"/storage_pool/"+sub)
                 for item in ext_disk:
                     if item == ".wh..wh.orph":
                         ext_disk.remove(".wh..wh.orph")
                 for item in ext_disk:
-                    ffl.append(ext_path + i + "/" + "ext_storage_"+ i +"/" + sub +"/" + item)
+                    ffl.append(ext_path + i + "/" + "storage_pool/" + sub +"/" + item)
         local = os.listdir(local_path)
         for i in local:
             items = os.listdir(local_path+i)
