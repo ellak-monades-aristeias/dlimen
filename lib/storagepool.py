@@ -5,7 +5,9 @@ import os, os.path
 import time
 import logging
 
-
+def file_counter(path):
+    cpt = sum([len(files) for r, d, files in os.walk(path)])
+    return cpt
 
 class Storage:
     def __init__(self, cfg, log_file):
@@ -39,16 +41,17 @@ class Storage:
         self.logger.info("mounting disk: %s" % (disk_name))
         os.makedirs('%s%s' % (ext_path, disk_name))
         disk_mount_point = ext_path + disk_name +'/'
-        subprocess.Popen(['mount', mount_list[-1], disk_mount_point])
+        subprocess.Popen(['mount', mount_list[-1], disk_mount_point, '-o', 'umask=0022,gid=33,uid=33'])
         time.sleep(1)
         in_folder = "ext_storage_" + disk_name + "/"
         for x in pool_subs:
             if not os.path.exists('%s%s/%s/%s' % (ext_path, disk_name, in_folder, x)):
                 os.makedirs('%s%s/%s/%s' % (ext_path, disk_name, in_folder, x))
         time.sleep(1)
+#	subprocess.Popen(['chown','-R','www-data.www-data',pool_dir])
         for x in pool_subs:
             subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,append:%s=rw+nolwh' % (disk_mount_point+in_folder+x),
-                          '-o', 'noplink', '-o', 'create=rr', 'none', '%s' % (pool_dir+x)])
+                           '-o', 'noplink', '-o', 'create=rr', 'none', '%s' % (pool_dir+x)])
 
 
     #umounts the usb device that has been unplugged
@@ -67,6 +70,7 @@ class Storage:
         self.logger.info("umounting: %s" % device.device_node)
         disk = device.device_node.split("/")
         disk = disk[2]
+#	subprocess.Popen(['chown','-R','www-data.www-data',pool_dir])
         for x in pool_subs:
             try:
                 subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,del:%s/ext_storage_%s/%s' % (mount_path,
@@ -74,10 +78,13 @@ class Storage:
             except:
                 pass
         time.sleep(1)
-        subprocess.Popen(['umount',"-l", umount_path])
+        p = subprocess.Popen(['umount',"-l", umount_path])
         self.logger.info("removing: %s" % part_name)
-        subprocess.Popen(['rm', '-r', '%s%s' % (ext_path, part_name)])
-
+	p.communicate()
+	if file_counter(ext_path + part_name) == 0:
+            subprocess.Popen(['rm', '-r', '%s%s' % (ext_path, part_name)])
+        else:
+            self.logger.info("could not remove %s" % ext_path+part_name)
     #umounts all the branches from the pool directory
     def umnt_all(self):    # on server close
         self.logger = logging.getLogger("Storage_module.umnt_all")
@@ -86,8 +93,9 @@ class Storage:
         pool_subs = pool_subs.split(',')
         for x in pool_subs:
             try:
-                subprocess.Popen(['sudo', 'umount', "-l", pool_dir+x], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                p = subprocess.Popen(['sudo', 'umount', "-l", pool_dir+x], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
                 self.logger.info("umounting %s" % x)
+                p.communicate()
             except:
                 pass
     #mounts a specific path
@@ -96,6 +104,7 @@ class Storage:
         pool_dir = self.cfg.get_option('storage_pool', 'pool_path')
         pool_subs = self.cfg.get_option('storage_pool', 'pool_folders')
         pool_subs = pool_subs.split(',')
+#	subprocess.Popen(['chown','-R','www-data.www-data',pool_dir])
         for x in pool_subs:
             subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'remount,append:%s=rw+nolwh' % (path+x),
                           '-o', 'noplink', '-o', 'create=rr', 'none', '%s' % (pool_dir+x)])
@@ -106,8 +115,10 @@ class Storage:
         pool_subs = self.cfg.get_option('storage_pool', 'pool_folders')
         pool_subs = pool_subs.split(',')
         for x in pool_subs:
-            subprocess.Popen(['sudo', 'umount', "-l", path+x])
+            p = subprocess.Popen(['sudo', 'umount', "-l", path+x])
             self.logger.info("umounting %s" % x)
+            p.communicate()
+
 #deletes pool folders and the folder from the targeted path
     def del_path(self, path):
         self.logger = logging.getLogger("Storage_module.del_path")
@@ -115,11 +126,16 @@ class Storage:
         pool_subs = self.cfg.get_option('storage_pool', 'pool_folders')
         pool_subs = pool_subs.split(',')
         for x in pool_subs:
-            self.logger.info("removing %s" % x)
-            subprocess.Popen(['sudo', 'rm', '-r', path+x])
+            if file_counter(path + x) == 0:
+            
+                self.logger.info("removing %s" % x)
+                subprocess.Popen(['sudo', 'rm', '-r', path+x])
+            else:
+                self.logger.info("could not remove %s directory of the pool" % x)
         time.sleep(1)
         self.logger.info("removing %s" % path)
-        subprocess.Popen(['sudo', 'rm', '-r', path])
+        if file_counter(path) == 0:
+            subprocess.Popen(['sudo', 'rm', '-r', path])
 
     def disk_src(self):
         try:
@@ -176,8 +192,12 @@ class Storage:
         for x in pool_subs:
             if not os.path.exists(pool_dir + x):
                 os.makedirs(pool_dir + x)
+	subprocess.Popen(['chown','-R','www-data.www-data',local_path])
+	subprocess.Popen(['chown','-R','www-data.www-data',pool_dir]) ################################
+
         self.logger.info("created pool directory and subdirectories")
         self.logger.info("mounting disks with subdirectories using aufs")
+#	subprocess.Popen(['chown','-R','www-data.www-data',pool_dir])
         for x in pool_subs: # local mounter
             subprocess.Popen(['sudo', 'mount', '-t', 'aufs', '-o', 'br=%s%s=rw+nolwh' % (local_path, x),
                               '-o', 'noplink','-o', 'create=rr', 'none', '%s%s' % (pool_dir, x)])
@@ -327,8 +347,10 @@ class Storage:
             disk = ext_path+disk_name+"/"
             disk_dir = os.listdir(disk)
             if disk_dir == []:
-                subprocess.Popen(["sudo", "umount", disk])
-                subprocess.Popen(["sudo", "rmdir", disk])
+                p = subprocess.Popen(["sudo", "umount", disk])
+                p.communicate()
+                p = subprocess.Popen(["sudo", "rmdir", disk])
+                p.communicate()
         dev = os.listdir("/dev/")
         sds = []
         for i in dev:

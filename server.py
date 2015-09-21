@@ -44,8 +44,6 @@ server.listen(1)
 
 logger.info("initializing storage instance")
 diskmanager = Storage(cfg, log_file)
-logger.info("initializing ClassA_module instance")
-logger.info("initializing ClassB_module instance")
 
 logger.info("calling init_pool function")
 diskmanager.init_pool()
