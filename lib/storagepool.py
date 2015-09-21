@@ -43,7 +43,7 @@ class Storage:
         disk_mount_point = ext_path + disk_name +'/'
         subprocess.Popen(['mount', mount_list[-1], disk_mount_point, '-o', 'umask=0022,gid=33,uid=33'])
         time.sleep(1)
-        in_folder = "ext_storage_" + disk_name + "/"
+        in_folder = "storage_pool/"
         for x in pool_subs:
             if not os.path.exists('%s%s/%s/%s' % (ext_path, disk_name, in_folder, x)):
                 os.makedirs('%s%s/%s/%s' % (ext_path, disk_name, in_folder, x))
