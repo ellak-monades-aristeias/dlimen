@@ -30,8 +30,6 @@ class CustomInstallCommand(distutils.cmd.Command):
         current_dir = os.path.dirname(os.path.realpath(__file__))
         print "Copying dir into /usr/local/bin/dlimen"
         copyall(current_dir, '/usr/local/bin/dlimen')
-        print "Copying upstart job into /etc/init/dlimen.conf"
-        copyall(current_dir+'/init/dlimen.conf', '/etc/init/.')
         print "----------dLimen Installation completed---------"
 
 setup(
