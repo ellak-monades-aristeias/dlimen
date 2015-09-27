@@ -2,7 +2,13 @@ import socket
 import os
 import os.path
 import logging
+import sys
 
+to_stop = False
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'stop':
+        to_stop = True
 
 
 print "Connecting..."
@@ -12,6 +18,10 @@ if os.path.exists("/tmp/python_unix_socket"):
     print "Ready"
     print "Press CTRL + C or Done to exit the server."
     while True:
+        if to_stop:
+            print "Stopping dLimen service"
+            client.send('done')
+            break        
         try:
             x = raw_input("> ")
             x = x.lstrip(" ")
