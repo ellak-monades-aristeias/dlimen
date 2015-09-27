@@ -8,8 +8,8 @@ import logging
 
 pseudofilesys = \
     dict(map((lambda x: (x, 1)), ('none', 'shmfs', 'procfs', 'tmpfs', 'devtmpfs')))
-
 gdf_cols = ('filesys', 'blocks', 'used', 'avail', 'use', 'dir')
+acceptable_fs = ('ext4', 'vfat', 'ntfs')
 
 def mounted():
     '''Get Mounted File Systems'''
@@ -29,9 +29,29 @@ def mounted():
     df.close()
     return mounted
 
+def device_mounted(values, searchFor):
+    for v in values:
+        if searchFor in v:
+            return True
+    return False
+
 def file_counter(path):
     cpt = sum([len(files) for r, d, files in os.walk(path)])
     return cpt
+
+def get_filesystem_type():
+    columns = ['NAME', 'FSTYPE']
+    p = os.popen('lsblk -P -o NAME,FSTYPE', 'r')
+    p.readline() # skip first line
+    filesystem_types = {}
+    for line in p.readlines():
+        line = line.strip()
+        splits = line.split('"', 4)
+        l=[splits[1], splits[3]]
+        rec = dict(zip(columns, l))
+        filesystem_types[rec['NAME']] = rec['FSTYPE']
+    return filesystem_types
+
 
 class Storage:
     def __init__(self, cfg, log_file):
@@ -329,10 +349,14 @@ class Storage:
         dev = os.listdir("/dev/")
         sds = []
         dev_mounted_list = mounted()
+        fs_types = get_filesystem_type()
         for i in dev:
+            if not device_mounted(dev_mounted_list, i):
+                if 'sd' in i and fs_types[i] in acceptable_fs:
+
             #if "sd" in i and "sda" not in i:
-            if "sd" in i and i not in dev_mounted_list:
-                sds.append(i)
+            #if "sd" in i and i not in dev_mounted_list and "sda" not in i:
+                    sds.append(i)
         for i in sds:
             try:
                 tmp = int(i[-1])
