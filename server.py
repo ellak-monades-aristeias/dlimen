@@ -11,7 +11,7 @@ import subprocess
 #logger initialization
 logger = logging.getLogger('Server_log')
 logger.setLevel(logging.DEBUG)
-log_file = './logfile.log'
+log_file = '/var/log/dlimen.log'
 fh = logging.FileHandler(log_file)
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
@@ -23,7 +23,7 @@ logger.addHandler(fh)
 logger.addHandler(ch)
 
 
-cfg = lib.config.Config('./config.conf', 1)
+cfg = lib.config.Config('/usr/local/bin/dlimen/config.conf', 1)
 cfg_conf = cfg.get()
 pool_subs = cfg.get_option('storage_pool', 'pool_folders')
 pool_subs = pool_subs.split(',')
