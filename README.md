@@ -24,6 +24,13 @@ Specifically, for:
   New feature requests or issues with the existing implementation can be submitted as _Issues_ in our github project page
   
 
+Παραδοτέα Έργου:
+
+| Ανάπτυξη Περιβάλλοντος Εργασίας – 1ο Παραδοτέο  | https://github.com/ellak-monades-aristeias/dlimen/wiki/Setting-up-the-environment |
+|---|---|
+| **Τεκμηρίωση – 2ο Παραδοτέο**  |**Installation Guide:** https://github.com/ellak-monades-aristeias/dlimen/wiki/Installation-Guide **Usage Guide:** https://github.com/ellak-monades-aristeias/dlimen/wiki/Usage-Guide
+  |
+
 ----------------------------------
 Copyright 2015 KOSTAS GIOTIS
 
