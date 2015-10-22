@@ -14,6 +14,15 @@ You can find more information, as well as step-by-step guide for the installatio
 
    [Wiki]: <https://github.com/ellak-monades-aristeias/dlimen/wiki>
 
+Specifically, for:
+* **Users:**  
+  Users kai find detailed usage guidelines in [this](https://github.com/ellak-monades-aristeias/dlimen/wiki/Usage-Guide#running-owncloud-with-dlimen) Wiki link
+
+* **Administrators/Developers/Contributors:**
+  To further configure, or extend the functionality of AutoIDM regarding the supported network devices and service-tests, administrators and Developers/Contributors can start with [this](https://github.com/ellak-monades-aristeias/dlimen/wiki/Usage-Guide#configurations-and-notes) link.  
+
+  New feature requests or issues with the existing implementation can be submitted as _Issues_ in our github project page
+  
 
 ----------------------------------
 Copyright 2015 KOSTAS GIOTIS
